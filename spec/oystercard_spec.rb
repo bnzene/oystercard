@@ -38,13 +38,18 @@ MAX_BALANCE = 90
 
   context '#touch_in' do
     it "changes status of in_journey? to true" do
+      subject.top_up(1)
       subject.touch_in
       expect(subject).to be_in_journey
+    end
+    it "raises error if not enough money" do
+      expect{ subject.touch_in }.to raise_error "Not enough money."
     end
   end
 
   context '#touch_out' do
     it "changes status of in_journey? to false" do
+      subject.top_up(1)
       subject.touch_in
       subject.touch_out
       expect(subject).not_to be_in_journey

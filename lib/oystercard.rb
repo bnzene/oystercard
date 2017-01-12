@@ -18,6 +18,7 @@ attr_reader :balance, :in_journey
   end
 
   def touch_in
+    sufficient_funds?
     @in_journey = true
   end
 
@@ -32,6 +33,8 @@ attr_reader :balance, :in_journey
 
   private
 
-
+  def sufficient_funds?
+    raise "Not enough money." if balance < 1
+  end
 
 end
