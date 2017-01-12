@@ -5,6 +5,9 @@ describe Oystercard do
 subject(:oystercard) { described_class.new }
 subject(:oystercard2) { described_class.new 10 }
 MAX_BALANCE = 90
+MIN_FARE = 1
+let(:station) { double :station }
+
 
   context "Freshly initialized card" do
     it "Tests that a new card has a balance of 0 by default" do
@@ -30,26 +33,42 @@ MAX_BALANCE = 90
   end
 
   context '#touch_in' do
+
+    it "records entry_station" do
+      subject.touch_in(station)
+      expect(subject.entry_station).to eq station
+    end
+
     it "changes status of in_journey? to true" do
-      subject.touch_in
+      subject.touch_in(station)
       expect(subject).to be_in_journey
     end
     it "raises error if not enough money" do
-      expect{ oystercard.touch_in }.to raise_error "Not enough money."
+      expect{ oystercard.touch_in(station) }.to raise_error "Not enough money."
     end
   end
 
   context '#touch_out' do
+    before do
+      subject.touch_in(station)
+    end
+
     it "changes status of in_journey? to false" do
-      subject.touch_in
       subject.touch_out
       expect(subject).not_to be_in_journey
     end
 
     it "deducts correct fare from balance" do
-      subject.touch_in
-      expect { subject.touch_out }.to change { subject.balance }.by -1
+      expect { subject.touch_out }.to change { subject.balance }.by -MIN_FARE
     end
+
+    it "sets the entry_station to nil upon touch_out" do
+      subject.touch_out
+      expect(subject.entry_station).to eq nil
+    end
+
+
+
   end
 
 
