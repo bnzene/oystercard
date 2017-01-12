@@ -2,5 +2,8 @@
 source "https://rubygems.org"
 # gem "rails"
 ruby '2.3.3'
-gem "rspec"
-gem "pry"
+
+group :development, :test do
+  gem "rspec"
+  gem "pry"
+end
