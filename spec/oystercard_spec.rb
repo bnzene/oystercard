@@ -1,4 +1,5 @@
 require 'oystercard'
+require 'journey'
 
 describe Oystercard do
 
@@ -44,6 +45,13 @@ let(:exit_station) { instance_double("Station") }
     it "raises error if not enough money" do
       expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
     end
+
+    it 'charges penalty with incomplete journey' do
+      oystercard.top_up(10)
+      oystercard.touch_in(entry_station)
+      expect{ oystercard.touch_in(entry_station) }.to change{oystercard.balance}.by -Journey::PENALTY
+    end
+
   end
 
   context '#touch_out' do
@@ -53,17 +61,24 @@ let(:exit_station) { instance_double("Station") }
     end
 
     it "deducts correct fare from balance" do
-      expect { oystercard.touch_out(exit_station) }.to change { oystercard.balance }.by -described_class::MIN_FARE
+      expect { oystercard.touch_out(exit_station) }.to change { oystercard.balance }.by -Journey::MIN_FARE
     end
 
-    it 'stores journey object in array of past journeys' do
+    it 'increases journeys array count by one' do
       expect { oystercard.touch_out(exit_station) }.to change { oystercard.journeys.count }.by 1
     end
 
+    it 'stores journey object in journeys array' do
+      oystercard.touch_out(exit_station)
+      expect(oystercard.journeys[-1]).to be_a(Journey)
+    end
 
+    it 'charges penalty with no touch in' do
+      oystercard.touch_out(exit_station)
+      expect{ oystercard.touch_out(exit_station) }.to change{oystercard.balance}.by -Journey::PENALTY
+    end
 
   end
-
 
 
 end

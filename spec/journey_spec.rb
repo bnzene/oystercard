@@ -1,10 +1,12 @@
 require 'journey'
+require 'oystercard'
 
 describe Journey do
 
 subject(:journey) { described_class.new }
 let(:entry_station) { instance_double("Station") }
 let(:exit_station) { instance_double("Station") }
+let(:oystercard) { instance_double("Oystercard") }
 
 
   context "#initialize" do
@@ -21,21 +23,6 @@ let(:exit_station) { instance_double("Station") }
       journey.start(entry_station)
       expect(journey.entry_station).to eq entry_station
     end
-
-    it "records entry_station" do
-      pending "refactor"
-      oystercard.top_up(10)
-      oystercard.touch_in(entry_station)
-      expect(oystercard.entry_station).to eq entry_station
-    end
-
-    it "changes status of in_journey? to true" do
-      pending "refactor"
-      oystercard.top_up(10)
-      oystercard.touch_in(entry_station)
-      expect(oystercard).to be_in_journey
-    end
-
   end
 
   context "#finish" do
@@ -50,6 +37,19 @@ let(:exit_station) { instance_double("Station") }
       journey.start(entry_station)
       journey.finish(exit_station)
       expect(journey).to be_complete
+    end
+  end
+
+  context "#fare" do
+    it 'charges minimum fare when journey is complete' do
+      journey.start(entry_station)
+      journey.finish(exit_station)
+      expect(journey.fare).to eq described_class::MIN_FARE
+    end
+
+    it 'charges penalty when journey is incomplete' do
+      journey.start(entry_station)
+      expect(journey.fare).to eq described_class::PENALTY
     end
   end
 
