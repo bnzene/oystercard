@@ -7,6 +7,7 @@ subject(:oystercard) { described_class.new }
 subject(:journey) { instance_double("Journey") }
 let(:entry_station) { instance_double("Station") }
 let(:exit_station) { instance_double("Station") }
+let(:journey_log) { instance_double("JourneyLog") }
 
 
   context "Freshly initialized card" do
@@ -14,12 +15,9 @@ let(:exit_station) { instance_double("Station") }
       expect(oystercard.balance).to eq(0)
     end
 
-    it "initializes with empty journeys array" do
-      expect(oystercard.journeys).to be_empty
-    end
-
-    it "expects card not to be in a journey by default" do
-      expect(oystercard.current_journey).to be_nil
+    it 'has an empty journey log' do
+      allow(journey_log).to receive(:journeys) { [] }
+      expect(oystercard.journey_log.journeys).to be_empty
     end
 
   end
@@ -35,51 +33,32 @@ let(:exit_station) { instance_double("Station") }
     end
   end
 
-  context "#touch_in with no funds" do
-    it "raises error" do
-      expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
+  context '#deduct' do
+    it 'deducts a given amount' do
+      expect{ oystercard.deduct(15) }.to change{oystercard.balance}.by -15
     end
   end
 
-  context '#touch_in' do
-    before do
-      oystercard.top_up(10)
-      oystercard.touch_in(entry_station)
+  context "#touch_in" do
+    context "with no funds" do
+      it "raises error" do
+        expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
+      end
     end
-    it "creates a current journey" do
-      expect(oystercard.current_journey).to be_a(Journey)
-    end
-
-    it 'charges penalty with incomplete journey' do
-      expect{ oystercard.touch_in(entry_station) }.to change{oystercard.balance}.by -Journey::PENALTY
-    end
+    # context 'failed to touch out on previous journey' do
+    #   oystercard.top_up(Journey::MIN_FARE + 10)
+    #   oystercard.touch_in(entry_station)
+    #   expect { oystercard.touch_in(entry_station) }.to change{ oystercard.balance } by -Journey::PENALTY
+    # end
   end
 
   context '#touch_out' do
-    before do
+    it 'calls #start on journey_log' do
       oystercard.top_up(10)
       oystercard.touch_in(entry_station)
+      allow(journey_log).to receive(:finish)
+      expect { oystercard.touch_out(exit_station) }.not_to raise_error
     end
-
-    it "deducts correct fare from balance" do
-      expect { oystercard.touch_out(exit_station) }.to change { oystercard.balance }.by -Journey::MIN_FARE
-    end
-
-    it 'increases journeys array count by one' do
-      expect { oystercard.touch_out(exit_station) }.to change { oystercard.journeys.count }.by 1
-    end
-
-    it 'stores journey object in journeys array' do
-      oystercard.touch_out(exit_station)
-      expect(oystercard.journeys[-1]).to be_a(Journey)
-    end
-
-    it 'charges penalty with no touch in' do
-      oystercard.touch_out(exit_station)
-      expect{ oystercard.touch_out(exit_station) }.to change{oystercard.balance}.by -Journey::PENALTY
-    end
-
   end
-
 
 end

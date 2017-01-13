@@ -46,7 +46,6 @@ let(:oystercard) { instance_double("Oystercard") }
       journey.finish(exit_station)
       expect(journey.fare).to eq described_class::MIN_FARE
     end
-
     it 'charges penalty when journey is incomplete' do
       journey.start(entry_station)
       expect(journey.fare).to eq described_class::PENALTY
