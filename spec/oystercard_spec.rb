@@ -35,23 +35,24 @@ let(:exit_station) { instance_double("Station") }
     end
   end
 
+  context "#touch_in with no funds" do
+    it "raises error" do
+      expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
+    end
+  end
+
   context '#touch_in' do
-    it "creates a current journey" do
+    before do
       oystercard.top_up(10)
       oystercard.touch_in(entry_station)
+    end
+    it "creates a current journey" do
       expect(oystercard.current_journey).to be_a(Journey)
     end
 
-    it "raises error if not enough money" do
-      expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
-    end
-
     it 'charges penalty with incomplete journey' do
-      oystercard.top_up(10)
-      oystercard.touch_in(entry_station)
       expect{ oystercard.touch_in(entry_station) }.to change{oystercard.balance}.by -Journey::PENALTY
     end
-
   end
 
   context '#touch_out' do

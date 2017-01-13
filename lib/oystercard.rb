@@ -25,14 +25,7 @@ class Oystercard
   end
 
   def touch_out(station)
-    if @current_journey
-      @current_journey.finish(station)
-      deduct(@current_journey.fare)
-      add_journey
-      empty_current_journey
-    else
-      no_current_journey_penalty(station)
-    end
+    @current_journey ? complete_current_journey(station) : no_current_journey_penalty(station)
   end
 
   private
@@ -49,10 +42,7 @@ class Oystercard
 
   def no_current_journey_penalty(station)
     create_current_journey
-    @current_journey.finish(station)
-    deduct(@current_journey.fare)
-    add_journey
-    empty_current_journey
+    complete_current_journey(station)
   end
 
   def deduct(amount)
@@ -65,11 +55,17 @@ class Oystercard
 
   def add_journey
     @journeys << @current_journey
+    empty_current_journey
   end
 
   def empty_current_journey
     @current_journey = nil
   end
 
+  def complete_current_journey(station)
+    @current_journey.finish(station)
+    deduct(@current_journey.fare)
+    add_journey
+  end
 
 end
