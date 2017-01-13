@@ -3,47 +3,44 @@ require 'oystercard'
 describe Oystercard do
 
 subject(:oystercard) { described_class.new }
-subject(:oystercard2) { described_class.new 10 }
-MAX_BALANCE = 90
-MIN_FARE = 1
-let(:entry_station) { double :station1 }
-let(:exit_station) { double :station2 }
+subject(:journey) { instance_double("Journey") }
+let(:entry_station) { instance_double("Station") }
+let(:exit_station) { instance_double("Station") }
 
 
   context "Freshly initialized card" do
-    it "Tests that a new card has a balance of 0 by default" do
+    it "has a balance of 0 by default" do
       expect(oystercard.balance).to eq(0)
     end
+
+    it "initializes with empty journeys array" do
+      expect(oystercard.journeys).to be_empty
+    end
+
+    it "expects card not to be in a journey by default" do
+      expect(oystercard.current_journey).to be_nil
+    end
+
   end
 
   context "#top_up" do
     it "tops up the oystercard" do
-      expect{subject.top_up(10)}.to change { subject.balance }.by 10
+      expect{ oystercard.top_up(10) }.to change{ oystercard.balance }.by 10
     end
 
     it "raises error when top-up would go over max balance" do
-      message = "Exceeds max balance of #{ MAX_BALANCE }."
-      expect{ subject.top_up(91) }.to raise_error message
-    end
-  end
-
-  context '#in_journey?' do
-    it "expects card not to be in a journey by default" do
-      expect(subject).not_to be_in_journey
+      message = "Exceeds max balance of #{ described_class::MAX_BALANCE }."
+      expect{ oystercard.top_up(described_class::MAX_BALANCE  + 1) }.to raise_error message
     end
   end
 
   context '#touch_in' do
-
-    it "records entry_station" do
-      subject.touch_in(entry_station)
-      expect(subject.entry_station).to eq entry_station
+    it "creates a current journey" do
+      oystercard.top_up(10)
+      oystercard.touch_in(entry_station)
+      expect(oystercard.current_journey).to be_a(Journey)
     end
 
-    it "changes status of in_journey? to true" do
-      subject.touch_in(entry_station)
-      expect(subject).to be_in_journey
-    end
     it "raises error if not enough money" do
       expect{ oystercard.touch_in(entry_station) }.to raise_error "Not enough money."
     end
@@ -51,27 +48,16 @@ let(:exit_station) { double :station2 }
 
   context '#touch_out' do
     before do
-      subject.touch_in(entry_station)
-    end
-
-    it "changes status of in_journey? to false" do
-      subject.touch_out(exit_station)
-      expect(subject).not_to be_in_journey
+      oystercard.top_up(10)
+      oystercard.touch_in(entry_station)
     end
 
     it "deducts correct fare from balance" do
-      expect { subject.touch_out(exit_station) }.to change { subject.balance }.by -MIN_FARE
+      expect { oystercard.touch_out(exit_station) }.to change { oystercard.balance }.by -described_class::MIN_FARE
     end
 
-    it "sets the entry_station to nil upon touch_out" do
-      subject.touch_out(exit_station)
-      expect(subject.entry_station).to eq nil
-    end
-
-    it 'stores entry_station and exit_station in array of past journeys' do
-      #subject.touch_in(station)
-      subject.touch_out(exit_station)
-      expect(subject.journeys).to include ({:entry_station=>entry_station, :exit_station=>exit_station})
+    it 'stores journey object in array of past journeys' do
+      expect { oystercard.touch_out(exit_station) }.to change { oystercard.journeys.count }.by 1
     end
 
 

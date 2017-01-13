@@ -1,4 +1,4 @@
-require './lib/station'
+require 'station'
 
 describe Station do
 
@@ -6,13 +6,13 @@ describe Station do
 
   context '#name' do
     it 'has a name' do
-      expect(subject.name).to eq "Euston"
+      expect(station.name).to eq "Euston"
     end
   end
 
   context '#zone' do
-    it 'belongs to a zone' do
-      expect(subject.zone).to eq 1
+    it 'has a zone' do
+      expect(station.zone).to eq 1
     end
   end
 
